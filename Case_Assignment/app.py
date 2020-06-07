@@ -6,17 +6,17 @@ Created on Thu Jun  4 15:48:04 2020
 """
 from flask import Flask, jsonify
 import numpy as np
-from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 import pandas as pd
 #%%
+### Database Setup
+engine = create_engine("sqlite:///hawaii.sqlite")
+
+#%%
 ### Flask Setup
-
 app = Flask(__name__)
-
 #%%
 # Flask Routes
-#%%
 @app.route("/")
 def welcome():
     """List all available api routes."""
@@ -29,14 +29,17 @@ def welcome():
         f"/api/v1.0/<start><br/>"
         f"/api/v1.0/<start>/<end><br/>"
     )
+
 #%%
-database_path="Resources/hawaii.sqlite"
-engine = create_engine(f"sqlite:///{database_path}")
-conn=engine.connect()
 @app.route("/api/v1.0/precipitation")
 def precipitation():
-    data = pd.read_sql('SELECT * FROM measurement', engine)
-    return(data.head())
+    
+    results = pd.read_sql('SELECT * FROM station', engine)
+
+    results_json = results[['station','name']].to_json(orient='records') 
+
+    return results_json
+
     
 #Convert the query results to a dictionary using `date` as the key and `prcp` as the value
 #Return the JSON representation of your dictionary.
