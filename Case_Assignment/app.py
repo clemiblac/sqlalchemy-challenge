@@ -73,28 +73,33 @@ def date_temperature():
 ### Start date given
 @app.route("/api/v1.0/<start>")
 def start_date(start):
-
     """Fetch data  for all dates greater than or equat to the start date the path variable is supplied by the use, or a 404 if not"""
-    
- 
     # When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
-    start_text=sqlalchemy.text("SELECT date FROM measurement WHERE date >= :name")
+    start_text=sqlalchemy.text("SELECT date, min(tobs),avg(tobs),max(tobs) FROM measurement WHERE date >= :name group by date")
     results = pd.read_sql(start_text, engine,params={'name':start})
+    
+    results_json = results.to_json(orient='records')
+    return results_json
 
-    results_json = results[['date','tobs']].to_json(orient='records')
-    return results_json  
-        
-
-
-
-    #return jsonify({"error": f" No data for start date {start} was found. Please make sure the format is YYYY-MM-DD"}), 404
-
-
-# Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start or start-end range.
+    #for row in results:
+       # search_term = row['date']
+       # if search_term!=start:
+            #return jsonify({"error": f" No data for start date {start} was found. Please make sure the format is YYYY-MM-DD"}),404
+    
+#%%
+### Start date and end date given
+# Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start-end range.
+@app.route("/api/v1.0/<start>/<end>")
+def start_end_date(start,end):
+    """Fetch data  for all dates greater than or equal to the start date the path variable is supplied by the use, or a 404 if not"""
+    # When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
+    start_text=sqlalchemy.text("SELECT date, min(tobs),avg(tobs),max(tobs) FROM measurement WHERE date\
+                               >= :name1 AND date <=:name2 group by date")
+    results = pd.read_sql(start_text, engine,params={'name1':start,'name2':end})
+    results_json = results.to_json(orient='records')
+    return results_json
 
 # When given the start and the end date, calculate the `TMIN`, `TAVG`, and `TMAX` for dates between the start and end date inclusive.
-#%%
-  #and `/api/v1.0/<start>/<end>`
 #%%
 if __name__ == '__main__':
     app.run(debug=True)
