@@ -6,6 +6,7 @@ Created on Thu Jun  4 15:48:04 2020
 """
 from flask import Flask, jsonify
 import numpy as np
+import sqlalchemy
 from sqlalchemy import create_engine
 import pandas as pd
 #%%
@@ -72,22 +73,21 @@ def date_temperature():
 ### Start date given
 @app.route("/api/v1.0/<start>")
 def start_date(start):
-    """Fetch data  for all dates greater than or equat to the start date
-    the path variable is souplied by the use, or a 404 if not"""
+
+    """Fetch data  for all dates greater than or equat to the start date the path variable is supplied by the use, or a 404 if not"""
     
-    return (f" You have entered a start date of {start} ")
+ 
     # When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
-    results = pd.read_sql("SELECT * FROM measurement\
-                          WHERE date >= date('start')", engine)
-    #formatted = start.replace(" ", "")
-    #for row in results:
-        #search_term=row['date'].replace(" ", "")
-        
-        #if search_term==formatted:
+    start_text=sqlalchemy.text("SELECT date FROM measurement WHERE date >= :name")
+    results = pd.read_sql(start_text, engine,params={'name':start})
+
     results_json = results[['date','tobs']].to_json(orient='records')
     return results_json  
         
-    return jsonify({"error": f" No data for start date {start} was found. Please make sure the format is YYYY-MM-DD"}), 404
+
+
+
+    #return jsonify({"error": f" No data for start date {start} was found. Please make sure the format is YYYY-MM-DD"}), 404
 
 
 # Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start or start-end range.
