@@ -20,25 +20,22 @@ Base=automap_base()
 Base.prepare(engine,reflect=True)
 Base.classes.keys()
 #%%
-
-#%%
 ### Flask Setup
 app = Flask(__name__)
 #%%
 # Flask Routes
 @app.route("/")
 def welcome():
-    """List all available api routes."""
-    """Welcome to the home page with the list of available routes"""
- 
+    """List of all available api routes.""" 
     return (
-        f"<h4>Below are the list of available Routes:<h4/><br/>"
+        f"<h2>Welcome to the Home Page</h2><br/>"
+        f"Below are the list of available routes:<br/>"
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
         f"<br/>"
-        f"Date Ranges<br/>"
-        f"Enter your desired start date or end date as shown -- /api/v1.0/YYYY-MM-DD<br/>"
+        f"<strong>Date Ranges: </strong><br/>"
+        f"Enter your desired start date or end date as shown --  <i>/api/v1.0/YYYY-MM-DD</i><br/>"
         f"/api/v1.0/&ltstart &gt<br/>"
         f"/api/v1.0/&ltstart&gt/&ltend&gt<br/>"
     )
@@ -50,11 +47,12 @@ def welcome():
 def precipitation():
 
     #Convert the query results to a dictionary using `date` as the key and `prcp` as the value
-    results = pd.read_sql("SELECT * FROM measurement", engine)
-    
-    
+    results = pd.read_sql("SELECT date,prcp FROM measurement", engine)
+    results.dropna(inplace=True)
+    results_dict = dict(zip(results.date, results.prcp))
+
     #Return the JSON representation of your dictionary.
-    results_json = results[['date','prcp']].to_json(orient='records') 
+    results_json=jsonify( results_dict)
     return results_json
  
 #%%
@@ -79,6 +77,7 @@ def date_temperature():
                           AND date BETWEEN\
                           date('2016-08-23') AND date('2017-08-23')\
                           ORDER BY DATE(date)", engine)
+
     #Return a JSON list of temperature observations (TOBS) for the previous year.
     results_json = results[['date','tobs']].to_json(orient='records')
     return results_json
@@ -97,7 +96,7 @@ def start_date(start):
             results_json = results.to_json(orient='records')
             return results_json
         else:
-            return jsonify({"error": f" No data for date {start} was found.The last date in this datset is '2017-08-23'"}),404
+            return jsonify({"error": f" No data for date {start} was found.The last date in this dataset is '2017-08-23'"}),404
 
 #%%
 ### Start date and end date given
