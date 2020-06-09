@@ -97,7 +97,7 @@ def start_date(start):
             results_json = results.to_json(orient='records')
             return results_json
         else:
-            return jsonify({"error": f" No data for date {start} was found."}),404
+            return jsonify({"error": f" No data for date {start} was found.The last date in this datset is '2017-08-23'"}),404
 
 #%%
 ### Start date and end date given
@@ -106,13 +106,17 @@ def start_date(start):
 def start_end_date(start,end):
     
     """Fetch data  for all dates greater than or equal to the start date the path variable is supplied by the use, or a 404 if not"""
-    # When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
     start_text=sqlalchemy.text("SELECT date, min(tobs),avg(tobs),max(tobs) FROM measurement WHERE date\
                                >= :name1 AND date <=:name2 group by date")
     # When given the start and the end date, calculate the `TMIN`, `TAVG`, and `TMAX` for dates between the start and end date inclusive.
     results = pd.read_sql(start_text, engine,params={'name1':start,'name2':end})
-    results_json = results.to_json(orient='records')
-    return results_json
+    for row in results:
+        if start>='2010-01-01' and end<='2017-08-23':
+            results_json = results.to_json(orient='records')
+            return results_json
+        else:
+            return jsonify({"error": f" Date range must be between '2010-01-01' and '2017-08-23'. There is no data for dates outside\
+                            this range."}),404
 
 
 #%%
